@@ -1,0 +1,172 @@
+Build a production-ready Flutter mobile application for the project:
+
+“AI-Based Elephant Movement Monitoring System”
+
+This app will receive real-time elephant detection alerts from a backend server and display:
+
+• Push notification alerts
+• Detection image
+• Timestamp
+• Confidence score
+• Location on Google Maps
+• Live camera preview stream
+• Alert history
+
+The design must be:
+
+• Clean
+• Minimal
+• Professional
+• No unnecessary animations
+• Dark-light theme support
+• Optimized for rural usability (large fonts, clear buttons)
+
+TECH STACK REQUIREMENTS
+
+Framework:
+Flutter (latest stable)
+
+State Management:
+Provider
+
+Backend:
+FastAPI (REST API)
+
+Database:
+Firebase Firestore
+
+Push Notifications:
+Firebase Cloud Messaging (FCM)
+
+Maps:
+Google Maps Flutter Plugin
+
+Networking:
+Dio package
+
+FUNCTIONAL REQUIREMENTS
+1️⃣ Authentication (Simple)
+
+• Anonymous login via Firebase
+• Store user ID in Firestore
+
+2️⃣ Home Screen
+
+Display:
+
+• System Status (Online / Offline)
+• Last Detection Alert Card
+• Quick Access Buttons:
+
+View Live Camera
+
+View Alert History
+
+Open Map
+
+3️⃣ Real-Time Push Notification
+
+When backend sends:
+{
+"timestamp": "",
+"confidence": 0.91,
+"image_url": "",
+"latitude": "",
+"longitude": ""
+}
+
+The app should:
+
+• Show push notification
+• On tap → open Alert Detail screen
+
+4️⃣ Alert Detail Screen
+
+Display:
+
+• Captured detection image (network image)
+• Timestamp formatted properly
+• Confidence %
+• Embedded Google Map with marker
+• Button: Open in Google Maps
+
+5️⃣ Live Camera Screen
+
+Display MJPEG or RTSP stream from Raspberry Pi camera:
+
+Example stream URL:
+http://<raspberry_pi_ip>:5000/video_feed
+
+• Full screen view
+• Loading indicator
+• Auto reconnect if stream drops
+
+6️⃣ Alert History Screen
+
+Fetch from Firestore collection:
+
+alerts/
+
+Each document:
+{
+timestamp,
+confidence,
+image_url,
+latitude,
+longitude
+}
+
+Display as:
+
+ListView with cards
+Sort by latest first
+
+7️⃣ Settings Screen
+
+• Toggle Notifications On/Off
+• Backend Base URL Config
+• Clear Alert History
+
+ARCHITECTURE STRUCTURE
+
+Use clean architecture:
+
+lib/
+├── core/
+├── models/
+├── services/
+├── providers/
+├── screens/
+├── widgets/
+└── main.dart
+
+Follow separation of concerns strictly.
+
+UI DESIGN GUIDELINES
+
+• Use Material 3
+• Rounded cards
+• Large readable typography
+• Red alert banner when elephant detected
+• Map marker icon customized as elephant icon
+
+ERROR HANDLING
+
+• Show proper error messages
+• Handle no internet scenario
+• Handle stream disconnection
+• Handle empty alert history
+
+ADDITIONAL REQUIREMENTS
+
+• Code must be fully runnable
+• Include pubspec.yaml dependencies
+• Include Firebase setup instructions
+• Include Android manifest configuration for internet & maps
+• Comment major logic clearly
+• Production-level code quality
+• No placeholder TODOs
+• No dummy screens
+• Complete working structure
+
+Generate full source code.
