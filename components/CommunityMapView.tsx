@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -117,28 +117,34 @@ export function CommunityMapView({ nodes, onRefresh }: Props) {
           longitudeDelta: 0.04,
         }}
       >
+        {showZones
+          ? nodes
+              .filter((n) => getNodeStatus(n) !== 'inactive')
+              .map((node) => {
+                const status = getNodeStatus(node) as Exclude<NodeStatus, 'inactive'>;
+                return (
+                  <Circle
+                    key={`zone-${node.id}`}
+                    center={{ latitude: node.latitude, longitude: node.longitude }}
+                    radius={500}
+                    fillColor={ZONE_CONFIG[status].fill}
+                    strokeColor={ZONE_CONFIG[status].stroke}
+                    strokeWidth={1.5}
+                  />
+                );
+              })
+          : null}
         {nodes.map((node) => {
           const status = getNodeStatus(node);
           const config = STATUS_CONFIG[status];
-
           return (
-            <React.Fragment key={node.id}>
-              {showZones && status !== 'inactive' && (
-                <Circle
-                  center={{ latitude: node.latitude, longitude: node.longitude }}
-                  radius={500}
-                  fillColor={ZONE_CONFIG[status as Exclude<NodeStatus, 'inactive'>].fill}
-                  strokeColor={ZONE_CONFIG[status as Exclude<NodeStatus, 'inactive'>].stroke}
-                  strokeWidth={1.5}
-                />
-              )}
-              <Marker
-                coordinate={{ latitude: node.latitude, longitude: node.longitude }}
-                onPress={() => handleMarkerPress(node)}
-                pinColor={config.markerColor}
-                title={node.node_id}
-              />
-            </React.Fragment>
+            <Marker
+              key={`marker-${node.id}`}
+              coordinate={{ latitude: node.latitude, longitude: node.longitude }}
+              onPress={() => handleMarkerPress(node)}
+              pinColor={config.markerColor}
+              title={node.node_id}
+            />
           );
         })}
       </MapView>

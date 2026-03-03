@@ -23,7 +23,6 @@ function RootLayoutNav() {
   const isDark = colorScheme === 'dark';
   const bg = isDark ? '#0B1012' : '#FFFFFF';
   const text = isDark ? '#EDF2F4' : '#0B1012';
-  const border = isDark ? '#161E21' : '#FFFFFF';
 
   return (
     <Stack>
@@ -36,7 +35,6 @@ function RootLayoutNav() {
           headerTintColor: text,
           headerShadowVisible: false,
           headerBackTitle: 'Back',
-          headerBackButtonMenuEnabled: false,
         }}
       />
     </Stack>

@@ -81,6 +81,8 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
   // Track last known top alert to detect new arrivals
   const lastAlertIdRef = useRef<string | null>(null);
   const isFirstLoadRef = useRef(true);
+  // Use a ref for voiceSettings so refreshAlerts doesn't need it as a dependency
+  const voiceSettingsRef = useRef<VoiceSettings>(DEFAULT_VOICE);
 
   useEffect(() => {
     (async () => {
@@ -97,8 +99,11 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
         }
         if (storedSettings)
           setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(storedSettings) });
-        if (storedVoice)
-          setVoiceSettings({ ...DEFAULT_VOICE, ...JSON.parse(storedVoice) });
+        if (storedVoice) {
+          const parsed = { ...DEFAULT_VOICE, ...JSON.parse(storedVoice) };
+          setVoiceSettings(parsed);
+          voiceSettingsRef.current = parsed;
+        }
       } catch (e) {
         console.error('Failed to load stored data:', e);
       }
@@ -118,15 +123,14 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
 
       // Detect new alert for voice
       const newestId = sorted[0]?.id ?? null;
-      const voiceRef = voiceSettings;
       if (
         !isFirstLoadRef.current &&
         newestId &&
         newestId !== lastAlertIdRef.current &&
-        voiceRef.enabled
+        voiceSettingsRef.current.enabled
       ) {
         const newest = sorted[0];
-        speakAlert(newest.latitude, newest.longitude, voiceRef.language);
+        speakAlert(newest.latitude, newest.longitude, voiceSettingsRef.current.language);
       }
 
       if (isFirstLoadRef.current) isFirstLoadRef.current = false;
@@ -139,7 +143,7 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [voiceSettings]);
+  }, []);
 
   const refreshNodes = useCallback(async () => {
     try {
@@ -173,11 +177,12 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
 
   const updateVoiceSettings = useCallback(
     async (newVoice: Partial<VoiceSettings>) => {
-      const updated = { ...voiceSettings, ...newVoice };
+      const updated = { ...voiceSettingsRef.current, ...newVoice };
+      voiceSettingsRef.current = updated;
       setVoiceSettings(updated);
       await AsyncStorage.setItem(VOICE_KEY, JSON.stringify(updated));
     },
-    [voiceSettings],
+    [],
   );
 
   const clearAlerts = useCallback(async () => {
