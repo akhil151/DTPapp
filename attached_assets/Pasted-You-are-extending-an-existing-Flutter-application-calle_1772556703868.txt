@@ -1,0 +1,222 @@
+You are extending an existing Flutter application called:
+
+"AI-Based Elephant Movement Monitoring System"
+
+The app already includes:
+
+• Firebase authentication
+• Alert notifications
+• Alert history
+• Google Maps integration
+• Live camera stream
+• Backend (FastAPI) integration
+• Firestore database
+
+You must now add TWO advanced features:
+
+1️⃣ Live Community Alert Map
+2️⃣ Auto Voice Alert Mode (Local Language Support)
+
+You must integrate them cleanly into the existing architecture using Provider state management.
+
+Do NOT break existing functionality.
+
+🔵 FEATURE 1: LIVE COMMUNITY ALERT MAP
+
+Create a new screen:
+
+CommunityMapScreen
+
+This screen must show:
+
+A. Active Detection Nodes
+
+Source:
+Firestore collection: nodes/
+
+Each node document:
+{
+node_id,
+latitude,
+longitude,
+last_detection_timestamp,
+is_active
+}
+
+Display:
+• Blue marker for active nodes
+• Grey marker for inactive nodes
+
+B. Alert Zones (Red Circles)
+
+If node has detection within last 30 minutes:
+
+Draw red circle:
+• Radius: 500 meters
+• Fill opacity: 0.3
+• Border color: red
+
+Label:
+"High Risk Zone"
+
+C. Safe Zones (Green Circles)
+
+If node has no detection in last 6 hours:
+
+Draw green circle:
+• Radius: 500 meters
+• Fill opacity: 0.2
+• Border color: green
+
+Label:
+"Safe Zone"
+
+D. Time Since Last Detection
+
+On tapping a node marker:
+
+Show bottom sheet with:
+
+• Node ID
+• Last detection timestamp
+• Time since last detection (calculated dynamically)
+• Current status: Safe / Alert / Monitoring
+
+E. Real-Time Updates
+
+Use Firestore stream to:
+
+• Auto-update map
+• Update circles dynamically
+• No manual refresh
+
+F. UI Requirements
+
+• Full screen Google Map
+• Toggle button: Show Zones On/Off
+• Legend overlay:
+
+🔵 Node
+
+🔴 Alert Zone
+
+🟢 Safe Zone
+
+• Clean minimal UI
+• No clutter
+• Optimized performance (avoid excessive rebuilds)
+
+🟢 FEATURE 2: AUTO VOICE ALERT MODE (LOCAL LANGUAGE)
+
+Add voice alert capability when push notification arrives.
+
+A. Text-to-Speech Integration
+
+Use Flutter TTS package.
+
+Add support for:
+
+• Tamil
+• Hindi
+• English (fallback)
+
+Allow language selection in Settings screen.
+
+B. When Alert Received:
+
+App must speak:
+
+"Elephant detected near [Zone Name]. Please stay indoors."
+
+If zone name not available:
+Use coordinates.
+
+C. Voice Settings Screen
+
+Add to Settings:
+
+• Toggle Voice Alerts On/Off
+• Language dropdown:
+
+English
+
+Tamil
+
+Hindi
+
+• Test Voice button
+
+Persist settings using SharedPreferences.
+
+D. Background Handling
+
+When app is:
+
+• In foreground → Speak immediately
+• In background → Speak when app opens
+• If phone in silent mode → Do NOT override system
+
+E. Performance Requirements
+
+• Prevent duplicate voice triggers
+• Throttle repeated alerts (min 60 seconds gap)
+• Properly dispose TTS engine
+
+🏗️ ARCHITECTURE REQUIREMENTS
+
+Follow clean architecture.
+
+Add:
+
+providers/
+community_map_provider.dart
+voice_alert_provider.dart
+
+services/
+tts_service.dart
+map_service.dart
+
+Do NOT mix UI and logic.
+
+Use Provider correctly.
+
+📦 DEPENDENCIES TO ADD
+
+google_maps_flutter
+flutter_tts
+shared_preferences
+intl (for time formatting)
+
+⚠️ IMPORTANT IMPLEMENTATION RULES
+
+• Must not break existing screens
+• Code must be production-ready
+• Proper error handling
+• Handle no internet case
+• Handle Firestore permission errors
+• Handle missing node fields
+• Avoid unnecessary re-renders
+
+🧠 EDGE CASES TO HANDLE
+
+• No nodes in database
+• Multiple alerts overlapping
+• Map marker clustering if >20 nodes
+• Language not supported on device
+
+🎯 OUTPUT EXPECTATION
+
+Generate:
+
+• All new Dart files
+• Modified pubspec.yaml
+• Updated Settings screen
+• CommunityMapScreen complete code
+• TTS service complete code
+• Integration instructions
+
+No placeholders.
+No TODO comments.
+No partial implementations.
+
+Complete runnable solution.

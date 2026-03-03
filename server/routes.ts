@@ -10,12 +10,22 @@ interface Alert {
   longitude: number;
 }
 
+interface Node {
+  id: string;
+  node_id: string;
+  latitude: number;
+  longitude: number;
+  last_detection_timestamp: string | null;
+  is_active: boolean;
+}
+
 let alerts: Alert[] = [
   {
     id: '1',
     timestamp: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
     confidence: 0.94,
-    image_url: 'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=600&q=80',
+    image_url:
+      'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=600&q=80',
     latitude: -2.6527,
     longitude: 37.2606,
   },
@@ -23,7 +33,8 @@ let alerts: Alert[] = [
     id: '2',
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
     confidence: 0.87,
-    image_url: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=600&q=80',
+    image_url:
+      'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=600&q=80',
     latitude: -2.6512,
     longitude: 37.2598,
   },
@@ -31,7 +42,8 @@ let alerts: Alert[] = [
     id: '3',
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 9).toISOString(),
     confidence: 0.73,
-    image_url: 'https://images.unsplash.com/photo-1551316679-9c6ae9dec224?w=600&q=80',
+    image_url:
+      'https://images.unsplash.com/photo-1551316679-9c6ae9dec224?w=600&q=80',
     latitude: -2.654,
     longitude: 37.262,
   },
@@ -39,7 +51,8 @@ let alerts: Alert[] = [
     id: '4',
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
     confidence: 0.61,
-    image_url: 'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=600&q=80',
+    image_url:
+      'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=600&q=80',
     latitude: -2.6505,
     longitude: 37.259,
   },
@@ -47,9 +60,71 @@ let alerts: Alert[] = [
     id: '5',
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
     confidence: 0.91,
-    image_url: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=600&q=80',
+    image_url:
+      'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=600&q=80',
     latitude: -2.653,
     longitude: 37.261,
+  },
+];
+
+const nodes: Node[] = [
+  {
+    id: 'n1',
+    node_id: 'NODE-001',
+    latitude: -2.652,
+    longitude: 37.26,
+    last_detection_timestamp: new Date(
+      Date.now() - 20 * 60 * 1000,
+    ).toISOString(),
+    is_active: true,
+  },
+  {
+    id: 'n2',
+    node_id: 'NODE-002',
+    latitude: -2.649,
+    longitude: 37.258,
+    last_detection_timestamp: new Date(
+      Date.now() - 8 * 3600 * 1000,
+    ).toISOString(),
+    is_active: true,
+  },
+  {
+    id: 'n3',
+    node_id: 'NODE-003',
+    latitude: -2.655,
+    longitude: 37.263,
+    last_detection_timestamp: new Date(
+      Date.now() - 2 * 86400 * 1000,
+    ).toISOString(),
+    is_active: false,
+  },
+  {
+    id: 'n4',
+    node_id: 'NODE-004',
+    latitude: -2.651,
+    longitude: 37.264,
+    last_detection_timestamp: new Date(
+      Date.now() - 5 * 60 * 1000,
+    ).toISOString(),
+    is_active: true,
+  },
+  {
+    id: 'n5',
+    node_id: 'NODE-005',
+    latitude: -2.653,
+    longitude: 37.257,
+    last_detection_timestamp: new Date(
+      Date.now() - 3 * 3600 * 1000,
+    ).toISOString(),
+    is_active: true,
+  },
+  {
+    id: 'n6',
+    node_id: 'NODE-006',
+    latitude: -2.647,
+    longitude: 37.265,
+    last_detection_timestamp: null,
+    is_active: true,
   },
 ];
 
@@ -80,8 +155,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ message: 'All alerts cleared' });
   });
 
+  app.get('/api/nodes', (_req, res) => {
+    res.json(nodes);
+  });
+
+  app.patch('/api/nodes/:id', (req, res) => {
+    const node = nodes.find((n) => n.id === req.params.id);
+    if (!node) return res.status(404).json({ error: 'Node not found' });
+    const { last_detection_timestamp, is_active } = req.body;
+    if (last_detection_timestamp !== undefined)
+      node.last_detection_timestamp = last_detection_timestamp;
+    if (is_active !== undefined) node.is_active = is_active;
+    return res.json(node);
+  });
+
   app.get('/api/status', (_req, res) => {
-    res.json({ status: 'online', alertCount: alerts.length });
+    res.json({ status: 'online', alertCount: alerts.length, nodeCount: nodes.length });
   });
 
   const httpServer = createServer(app);

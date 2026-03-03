@@ -18,6 +18,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: 'video', selected: 'video.fill' }} />
         <Label>Camera</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="map">
+        <Icon sf={{ default: 'map', selected: 'map.fill' }} />
+        <Label>Map</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="history">
         <Icon sf={{ default: 'list.bullet', selected: 'list.bullet' }} />
         <Label>History</Label>
@@ -45,7 +49,11 @@ function ClassicTabLayout() {
         tabBarInactiveTintColor: colors.tabIconDefault,
         tabBarStyle: {
           position: 'absolute',
-          backgroundColor: isIOS ? 'transparent' : isDark ? '#0B1012' : '#FFFFFF',
+          backgroundColor: isIOS
+            ? 'transparent'
+            : isDark
+              ? '#0B1012'
+              : '#FFFFFF',
           borderTopWidth: isWeb ? 1 : 0,
           borderTopColor: isDark ? '#1F2B2F' : '#D5E0E4',
           elevation: 0,
@@ -83,6 +91,15 @@ function ClassicTabLayout() {
           title: 'Camera',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="videocam" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="map"
+        options={{
+          title: 'Map',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="map" size={size} color={color} />
           ),
         }}
       />

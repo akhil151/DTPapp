@@ -16,14 +16,34 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAlerts } from '@/context/AlertsContext';
+import { testVoice, stopSpeaking } from '@/services/ttsService';
 
-function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
+type Language = 'en' | 'hi' | 'ta';
+
+const LANGUAGES: { code: Language; label: string; native: string }[] = [
+  { code: 'en', label: 'English', native: 'English' },
+  { code: 'hi', label: 'Hindi', native: 'हिंदी' },
+  { code: 'ta', label: 'Tamil', native: 'தமிழ்' },
+];
+
+function SettingsSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const colors = isDark ? Colors.dark : Colors.light;
   return (
     <View style={styles.section}>
-      <Text style={[styles.sectionTitle, { color: colors.subtext, fontFamily: 'Inter_500Medium' }]}>
+      <Text
+        style={[
+          styles.sectionTitle,
+          { color: colors.subtext, fontFamily: 'Inter_500Medium' },
+        ]}
+      >
         {title}
       </Text>
       <View
@@ -38,48 +58,15 @@ function SettingsSection({ title, children }: { title: string; children: React.R
   );
 }
 
-function SettingsRow({
-  icon,
-  iconColor,
-  label,
-  children,
-  isLast,
-}: {
-  icon: string;
-  iconColor: string;
-  label: string;
-  children: React.ReactNode;
-  isLast?: boolean;
-}) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const colors = isDark ? Colors.dark : Colors.light;
-  return (
-    <View
-      style={[
-        styles.row,
-        !isLast && { borderBottomWidth: 1, borderBottomColor: colors.cardBorder },
-      ]}
-    >
-      <View style={[styles.rowIcon, { backgroundColor: `${iconColor}22` }]}>
-        <Ionicons name={icon as any} size={18} color={iconColor} />
-      </View>
-      <Text style={[styles.rowLabel, { color: colors.text, fontFamily: 'Inter_400Regular' }]}>
-        {label}
-      </Text>
-      <View style={styles.rowValue}>{children}</View>
-    </View>
-  );
-}
-
 export default function SettingsScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const colors = isDark ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
-  const { settings, updateSettings, clearAlerts, isOnline, alerts } = useAlerts();
+  const { settings, voiceSettings, updateSettings, updateVoiceSettings, clearAlerts, isOnline, alerts } = useAlerts();
 
   const [cameraUrlInput, setCameraUrlInput] = useState(settings.cameraUrl);
+  const [isTesting, setIsTesting] = useState(false);
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
@@ -96,6 +83,30 @@ export default function SettingsScreen() {
     },
     [updateSettings],
   );
+
+  const handleToggleVoice = useCallback(
+    (value: boolean) => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      if (!value) stopSpeaking();
+      updateVoiceSettings({ enabled: value });
+    },
+    [updateVoiceSettings],
+  );
+
+  const handleSelectLanguage = useCallback(
+    (code: Language) => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      updateVoiceSettings({ language: code });
+    },
+    [updateVoiceSettings],
+  );
+
+  const handleTestVoice = useCallback(async () => {
+    setIsTesting(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await testVoice(voiceSettings.language);
+    setTimeout(() => setIsTesting(false), 2000);
+  }, [voiceSettings.language]);
 
   const handleClearHistory = useCallback(() => {
     Alert.alert(
@@ -124,12 +135,16 @@ export default function SettingsScreen() {
       ]}
       showsVerticalScrollIndicator={false}
     >
-      {/* Header */}
-      <Text style={[styles.title, { color: colors.text, fontFamily: 'Inter_700Bold' }]}>
+      <Text
+        style={[
+          styles.title,
+          { color: colors.text, fontFamily: 'Inter_700Bold' },
+        ]}
+      >
         Settings
       </Text>
 
-      {/* Status */}
+      {/* Status Card */}
       <View
         style={[
           styles.statusCard,
@@ -144,11 +159,21 @@ export default function SettingsScreen() {
             ]}
           />
           <View>
-            <Text style={[styles.statusTitle, { color: colors.text, fontFamily: 'Inter_600SemiBold' }]}>
+            <Text
+              style={[
+                styles.statusTitle,
+                { color: colors.text, fontFamily: 'Inter_600SemiBold' },
+              ]}
+            >
               System {isOnline ? 'Online' : 'Offline'}
             </Text>
-            <Text style={[styles.statusSub, { color: colors.subtext, fontFamily: 'Inter_400Regular' }]}>
-              {isOnline ? `${alerts.length} alerts synced` : 'Check your connection'}
+            <Text
+              style={[
+                styles.statusSub,
+                { color: colors.subtext, fontFamily: 'Inter_400Regular' },
+              ]}
+            >
+              {isOnline ? `${alerts.length} alerts synced` : 'Check connection'}
             </Text>
           </View>
         </View>
@@ -180,10 +205,20 @@ export default function SettingsScreen() {
       <SettingsSection title="CAMERA">
         <View style={styles.cameraInputContainer}>
           <View style={styles.cameraInputHeader}>
-            <View style={[styles.rowIcon, { backgroundColor: 'rgba(45,190,108,0.12)' }]}>
+            <View
+              style={[
+                styles.rowIcon,
+                { backgroundColor: 'rgba(45,190,108,0.12)' },
+              ]}
+            >
               <Ionicons name="videocam" size={18} color={Colors.accent} />
             </View>
-            <Text style={[styles.rowLabel, { color: colors.text, fontFamily: 'Inter_400Regular' }]}>
+            <Text
+              style={[
+                styles.rowLabel,
+                { color: colors.text, fontFamily: 'Inter_400Regular' },
+              ]}
+            >
               Raspberry Pi Camera URL
             </Text>
           </View>
@@ -213,7 +248,12 @@ export default function SettingsScreen() {
             ]}
           >
             <Ionicons name="checkmark" size={16} color="#0B1012" />
-            <Text style={[styles.saveBtnText, { fontFamily: 'Inter_600SemiBold' }]}>
+            <Text
+              style={[
+                styles.saveBtnText,
+                { fontFamily: 'Inter_600SemiBold' },
+              ]}
+            >
               Save URL
             </Text>
           </Pressable>
@@ -222,57 +262,252 @@ export default function SettingsScreen() {
 
       {/* Notifications */}
       <SettingsSection title="NOTIFICATIONS">
-        <SettingsRow
-          icon="notifications"
-          iconColor={Colors.amber}
-          label="Alert Notifications"
-          isLast
-        >
+        <View style={styles.row}>
+          <View
+            style={[
+              styles.rowIcon,
+              { backgroundColor: 'rgba(245,166,35,0.12)' },
+            ]}
+          >
+            <Ionicons name="notifications" size={18} color={Colors.amber} />
+          </View>
+          <Text
+            style={[
+              styles.rowLabel,
+              { color: colors.text, fontFamily: 'Inter_400Regular', flex: 1 },
+            ]}
+          >
+            Alert Notifications
+          </Text>
           <Switch
             value={settings.notificationsEnabled}
             onValueChange={handleToggleNotifications}
             trackColor={{ false: colors.cardBorder, true: Colors.accent }}
             thumbColor="#ffffff"
           />
-        </SettingsRow>
+        </View>
       </SettingsSection>
 
-      {/* Data Management */}
+      {/* Voice Alerts */}
+      <SettingsSection title="VOICE ALERTS">
+        {/* Toggle */}
+        <View
+          style={[
+            styles.row,
+            { borderBottomWidth: 1, borderBottomColor: colors.cardBorder },
+          ]}
+        >
+          <View
+            style={[
+              styles.rowIcon,
+              { backgroundColor: 'rgba(45,190,108,0.12)' },
+            ]}
+          >
+            <Ionicons name="volume-high" size={18} color={Colors.accent} />
+          </View>
+          <Text
+            style={[
+              styles.rowLabel,
+              { color: colors.text, fontFamily: 'Inter_400Regular', flex: 1 },
+            ]}
+          >
+            Auto Voice Alerts
+          </Text>
+          <Switch
+            value={voiceSettings.enabled}
+            onValueChange={handleToggleVoice}
+            trackColor={{ false: colors.cardBorder, true: Colors.accent }}
+            thumbColor="#ffffff"
+          />
+        </View>
+
+        {/* Language Selection */}
+        <View style={styles.languageContainer}>
+          <Text
+            style={[
+              styles.languageTitle,
+              { color: colors.subtext, fontFamily: 'Inter_500Medium' },
+            ]}
+          >
+            Alert Language
+          </Text>
+          <View style={styles.languageRow}>
+            {LANGUAGES.map((lang) => {
+              const isSelected = voiceSettings.language === lang.code;
+              return (
+                <Pressable
+                  key={lang.code}
+                  onPress={() => handleSelectLanguage(lang.code)}
+                  style={({ pressed }) => [
+                    styles.langOption,
+                    {
+                      backgroundColor: isSelected
+                        ? Colors.accent
+                        : isDark
+                          ? '#0B1012'
+                          : '#F0F4F5',
+                      borderColor: isSelected
+                        ? Colors.accent
+                        : colors.cardBorder,
+                      opacity: pressed ? 0.85 : 1,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.langLabel,
+                      {
+                        color: isSelected ? '#0B1012' : colors.text,
+                        fontFamily: isSelected
+                          ? 'Inter_700Bold'
+                          : 'Inter_400Regular',
+                      },
+                    ]}
+                  >
+                    {lang.label}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.langNative,
+                      {
+                        color: isSelected
+                          ? 'rgba(11,16,18,0.7)'
+                          : colors.subtext,
+                        fontFamily: 'Inter_400Regular',
+                      },
+                    ]}
+                  >
+                    {lang.native}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Test Button */}
+        <View
+          style={[
+            styles.testContainer,
+            { borderTopWidth: 1, borderTopColor: colors.cardBorder },
+          ]}
+        >
+          <Pressable
+            onPress={handleTestVoice}
+            disabled={isTesting}
+            style={({ pressed }) => [
+              styles.testBtn,
+              {
+                backgroundColor: isDark ? '#0B1012' : '#F0F4F5',
+                borderColor: Colors.accent,
+                opacity: isTesting || pressed ? 0.7 : 1,
+              },
+            ]}
+          >
+            <Ionicons
+              name={isTesting ? 'volume-high' : 'play-circle'}
+              size={18}
+              color={Colors.accent}
+            />
+            <Text
+              style={[
+                styles.testBtnText,
+                { color: Colors.accent, fontFamily: 'Inter_600SemiBold' },
+              ]}
+            >
+              {isTesting ? 'Speaking...' : 'Test Voice'}
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* Info note */}
+        <View style={[styles.infoNote, { borderTopWidth: 1, borderTopColor: colors.cardBorder }]}>
+          <Ionicons name="information-circle-outline" size={14} color={colors.subtext} />
+          <Text
+            style={[
+              styles.infoText,
+              { color: colors.subtext, fontFamily: 'Inter_400Regular' },
+            ]}
+          >
+            Alerts are throttled to one voice message per minute. Silent mode is respected.
+          </Text>
+        </View>
+      </SettingsSection>
+
+      {/* Data */}
       <SettingsSection title="DATA">
-        <SettingsRow icon="server" iconColor={Colors.accent} label="Total Records" isLast>
-          <Text style={[styles.valueText, { color: colors.subtext, fontFamily: 'Inter_500Medium' }]}>
+        <View style={styles.row}>
+          <View
+            style={[
+              styles.rowIcon,
+              { backgroundColor: 'rgba(45,190,108,0.12)' },
+            ]}
+          >
+            <Ionicons name="server" size={18} color={Colors.accent} />
+          </View>
+          <Text
+            style={[
+              styles.rowLabel,
+              { color: colors.text, fontFamily: 'Inter_400Regular', flex: 1 },
+            ]}
+          >
+            Total Records
+          </Text>
+          <Text
+            style={[
+              styles.valueText,
+              { color: colors.subtext, fontFamily: 'Inter_500Medium' },
+            ]}
+          >
             {alerts.length} alerts
           </Text>
-        </SettingsRow>
+        </View>
       </SettingsSection>
 
       {/* Danger Zone */}
       <SettingsSection title="DANGER ZONE">
         <Pressable
           onPress={handleClearHistory}
-          style={({ pressed }) => [styles.dangerRow, { opacity: pressed ? 0.7 : 1 }]}
+          style={({ pressed }) => [
+            styles.dangerRow,
+            { opacity: pressed ? 0.7 : 1 },
+          ]}
         >
-          <View style={[styles.rowIcon, { backgroundColor: 'rgba(224,59,59,0.12)' }]}>
+          <View
+            style={[
+              styles.rowIcon,
+              { backgroundColor: 'rgba(224,59,59,0.12)' },
+            ]}
+          >
             <Ionicons name="trash" size={18} color={Colors.alertRed} />
           </View>
           <Text
             style={[
               styles.dangerLabel,
-              { color: Colors.alertRed, fontFamily: 'Inter_400Regular' },
+              { color: Colors.alertRed, fontFamily: 'Inter_400Regular', flex: 1 },
             ]}
           >
             Clear Alert History
           </Text>
-          <Ionicons name="chevron-forward" size={16} color={Colors.alertRed} style={{ marginLeft: 'auto' }} />
+          <Ionicons name="chevron-forward" size={16} color={Colors.alertRed} />
         </Pressable>
       </SettingsSection>
 
-      {/* App Info */}
       <View style={styles.appInfo}>
-        <Text style={[styles.appInfoText, { color: colors.subtext, fontFamily: 'Inter_400Regular' }]}>
+        <Text
+          style={[
+            styles.appInfoText,
+            { color: colors.subtext, fontFamily: 'Inter_400Regular' },
+          ]}
+        >
           ElephantWatch v1.0.0
         </Text>
-        <Text style={[styles.appInfoText, { color: colors.subtext, fontFamily: 'Inter_400Regular' }]}>
+        <Text
+          style={[
+            styles.appInfoText,
+            { color: colors.subtext, fontFamily: 'Inter_400Regular' },
+          ]}
+        >
           AI-Based Elephant Movement Monitoring
         </Text>
       </View>
@@ -316,8 +551,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rowLabel: { fontSize: 15, flex: 1 },
-  rowValue: { alignItems: 'flex-end' },
+  rowLabel: { fontSize: 15 },
   valueText: { fontSize: 14 },
   dangerRow: {
     flexDirection: 'row',
@@ -345,6 +579,39 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   saveBtnText: { fontSize: 15, color: '#0B1012' },
+  languageContainer: { padding: 16, gap: 12 },
+  languageTitle: { fontSize: 12, letterSpacing: 0.5 },
+  languageRow: { flexDirection: 'row', gap: 8 },
+  langOption: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    gap: 3,
+  },
+  langLabel: { fontSize: 13 },
+  langNative: { fontSize: 11 },
+  testContainer: { padding: 16 },
+  testBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1.5,
+  },
+  testBtnText: { fontSize: 15 },
+  infoNote: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  infoText: { fontSize: 12, flex: 1, lineHeight: 18 },
   appInfo: { alignItems: 'center', gap: 4, marginTop: 8 },
   appInfoText: { fontSize: 12 },
 });
